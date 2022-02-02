@@ -3,7 +3,7 @@ import { build, fake } from '@jackfranklin/test-data-bot'
 const personBuilder = build('Person', {
   fields: {
     name: fake((f) => f.name.findName()),
-    age: fake((f) => f.random.number({ min: 18, max: 65 })),
+    age: fake((f) => f.datatype.number({ min: 18, max: 65 })),
     email: fake((f) => f.internet.email()),
   },
 })

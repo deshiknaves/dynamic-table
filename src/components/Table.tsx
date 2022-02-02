@@ -1,8 +1,10 @@
-import { useMemo } from 'react'
+import { useEffect } from 'react'
 import {
   useTable,
   Column as BaseColumn,
   CellProps as BaseCellProps,
+  useSortBy,
+  IdType,
 } from 'react-table'
 
 export type Column<Type extends object> = BaseColumn<Type>
@@ -11,20 +13,29 @@ export type CellProps<CellData extends object> = BaseCellProps<CellData> & {
   onCommand: (row: Record<string, any>, command: string) => void
 }
 
+type SortOption<Data> = {
+  column?: IdType<Data>
+  direction?: 'asc' | 'desc'
+}
+
 type TableProps<Data extends object> = {
-  data: Data[]
   columns: Column<Data>[]
+  data: Data[]
+  sort?: SortOption<Data>
   onCommand: (
     row: Record<string, any>,
     command: string,
     data?: Record<string, any>
   ) => void
+  onSortChange: (sort?: SortOption<Data>) => void
 }
 
 export function Table<DataType extends object>({
-  data,
   columns,
+  data,
+  sort,
   onCommand,
+  onSortChange,
 }: TableProps<DataType>): JSX.Element {
   function handleCommand(
     row: Record<string, any>,
@@ -34,8 +45,39 @@ export function Table<DataType extends object>({
     onCommand(row, command, data)
   }
 
-  const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
-    useTable({ columns, data })
+  const {
+    getTableProps,
+    getTableBodyProps,
+    headerGroups,
+    rows,
+    prepareRow,
+    state: { sortBy },
+  } = useTable(
+    {
+      columns,
+      data,
+      manualSortBy: true,
+      disableMultiSort: true,
+      initialState: {
+        sortBy: sort
+          ? [{ id: sort.column as string, desc: sort.direction === 'desc' }]
+          : [],
+      },
+    },
+    useSortBy
+  )
+
+  useEffect(() => {
+    if (!sortBy.length) {
+      onSortChange(undefined)
+      return
+    }
+
+    onSortChange({
+      column: sortBy[0].id,
+      direction: sortBy[0].desc ? 'desc' : 'asc',
+    })
+  }, [sortBy])
 
   return (
     <table {...getTableProps()}>
@@ -43,7 +85,12 @@ export function Table<DataType extends object>({
         {headerGroups.map((headerGroup) => (
           <tr {...headerGroup.getHeaderGroupProps()}>
             {headerGroup.headers.map((column) => (
-              <th {...column.getHeaderProps()}>{column.render('Header')}</th>
+              <th {...column.getHeaderProps(column.getSortByToggleProps())}>
+                {column.render('Header')}
+                <span>
+                  {column.isSorted ? (column.isSortedDesc ? ' 🔽' : ' 🔼') : ''}
+                </span>
+              </th>
             ))}
           </tr>
         ))}

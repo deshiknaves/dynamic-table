@@ -68,14 +68,19 @@ function App() {
             return data.map((person) => ({ ...person, name: 'foo' }))
           }}
         >
-          {({ isLoading, data }) => {
+          {({ isLoading, data, sort, direction, setSort, setDirection }) => {
             return isLoading || !data ? (
               <p>Loading...</p>
             ) : (
               <Table
                 data={data}
                 columns={columns}
+                sort={{ column: sort, direction }}
                 onCommand={(...args) => console.log(...args)}
+                onSortChange={(sort) => {
+                  setSort(sort?.column)
+                  setDirection(sort?.direction)
+                }}
               />
             )
           }}

@@ -4,8 +4,13 @@ export type Person = {
   email: string
 }
 
-export function getPeople(): Promise<Person[]> {
-  return fetch('/api/people/')
+type PersonOptions = {
+  query?: string
+}
+
+export function getPeople({ query }: PersonOptions): Promise<Person[]> {
+  console.log(query)
+  return fetch(`/api/people?${query}`)
     .then((response) => response.json())
     .then(({ data }) => data)
 }
